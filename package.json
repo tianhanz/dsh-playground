@@ -1,0 +1,51 @@
+{
+  "name": "@playground/dsh-playground",
+  "version": "0.4.3",
+  "private": true,
+  "type": "module",
+  "description": "Use chat and native cards to find Playground competitions, read challenges and personal submissions, and submit ARM bundles for evaluation.",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "lib/*.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node test/api.test.mjs && node test/plugin.test.mjs && node test/workflow.test.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "demo:local": "node scripts/demo-local.mjs"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-tool",
+        "@deepseek-ai/dsh-client-ui-chat",
+        "@deepseek-ai/dsh-client-ui-workspace",
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-client-ui-session"
+      ]
+    }
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  }
+}

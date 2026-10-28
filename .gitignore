@@ -1,0 +1,4 @@
+_scratch/
+docs/
+node_modules/
+*.log
