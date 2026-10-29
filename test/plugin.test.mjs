@@ -409,6 +409,8 @@ test('M-01: confirmation command returns an error when the workflow throws', asy
   apply({ tools: scope.tools, get: () => undefined, inject: (_services, callback) => callback(scope) });
   const command = commands.find((item) => item.name === 'playground-confirm');
   const agent = { get id() { throw new Error('Session unavailable'); } };
-  const result = await command.handler({ rawInput: 'checked', agent, signal: new AbortController().signal });
-  assert.deepEqual(result, { kind: 'error', text: 'Session unavailable' });
+  for (const rawInput of ['checked', undefined]) {
+    const result = await command.handler({ rawInput, agent, signal: new AbortController().signal });
+    assert.deepEqual(result, { kind: 'error', text: 'Session unavailable' });
+  }
 });

@@ -222,7 +222,7 @@ test('F-03: API fallback preserves upload error stage and retry id', async () =>
   assert.equal(result.workflow.receipt.args.attempt_id, 7);
 });
 
-test('F-03: CLI receipts preserve successful and rejected bundle results', async () => {
+test('F-03: CLI receipts preserve successful and failed bundle JSON results', async () => {
   for (const bundleStatus of ['ready', 'failed']) {
     const violations = bundleStatus === 'failed' ? [{ message: 'bad bundle' }] : [];
     const f = await fixture({ submit: async () => ({ attempt_id: '19', attempt: { status: 'submitted', score: 0 }, bundle_response: { bundleStatus, violations } }) });
@@ -242,13 +242,22 @@ test('F-03: CLI receipts preserve successful and rejected bundle results', async
   }
 });
 
-test('F-03: CLI receipts reject invalid submission ids without API retry', async () => {
-  for (const attempt_id of [undefined, null, '', 'bad', 0, -1, 1.5, Infinity, true, [], Number.MAX_SAFE_INTEGER + 1]) {
-    const f = await fixture({ submit: async () => ({ attempt_id }) });
+test('F-03: CLI receipts clear confirmation on invalid submission ids without retry', async () => {
+  for (const attempt_id of [undefined, null, '', 'null', 'bad', 0, -1, 1.5, Infinity, true, [], Number.MAX_SAFE_INTEGER + 1]) {
+    let submitCalls = 0;
+    const f = await fixture({ submit: async () => { submitCalls++; return { attempt_id }; } });
     const checked = await f.workflow.prepare({ challenge_id: 'challenge-a' }, f.exec);
     f.record(checked);
-    await assert.rejects(f.workflow.confirm(checked.workflow.prepared.checkId, f.exec), /invalid submission id/);
+    const checkId = checked.workflow.prepared.checkId;
+    const result = await f.workflow.confirm(checkId, f.exec);
+    assert.equal(result.ok, false);
+    assert.equal(result.error.code, 'invalid_response');
+    f.record(result);
+    assert.equal(f.states.get('source').prepared, null);
     assert.equal(f.states.get('source').receipt, null);
+    const retried = await f.workflow.confirm(checkId, f.exec);
+    assert.equal(retried.error.code, 'confirmation_required');
+    assert.equal(submitCalls, 1);
     assert.deepEqual(f.calls, []);
   }
 });
