@@ -397,3 +397,18 @@ test('submit tool reports a rejected bundle with its violations', async () => {
   });
 });
 
+
+test('M-01: confirmation command returns an error when the workflow throws', async () => {
+  const commands = [];
+  const scope = {
+    tools: { register() {} },
+    commands: { register: (command) => commands.push(command) },
+    sessionProjections: { register() {} },
+    inject() {},
+  };
+  apply({ tools: scope.tools, get: () => undefined, inject: (_services, callback) => callback(scope) });
+  const command = commands.find((item) => item.name === 'playground-confirm');
+  const agent = { get id() { throw new Error('Session unavailable'); } };
+  const result = await command.handler({ rawInput: 'checked', agent, signal: new AbortController().signal });
+  assert.deepEqual(result, { kind: 'error', text: 'Session unavailable' });
+});
